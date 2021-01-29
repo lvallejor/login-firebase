@@ -1,8 +1,9 @@
 import React from "react";
+import { withRouter } from "react-router-dom";
 import { auth, db } from "../firebase";
 import { useState, useCallback } from "react";
 
-const Login = () => {
+const Login = (props) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -35,12 +36,13 @@ const Login = () => {
     }
   };
 
-  const login = React.useCallback(async () => {
+  const login = useCallback(async () => {
     try {
       await auth.signInWithEmailAndPassword(email, password);
       setEmail("");
       setPassword("");
       setError(null);
+      props.history.push("/admin");
     } catch (error) {
       if (error.code === "auth/invalid-email") {
         setError("Email no valido");
@@ -52,7 +54,7 @@ const Login = () => {
         setError("Email no registrado");
       }
     }
-  }, [email, password]);
+  }, [email, password, props.history]);
 
   const registrar = useCallback(async () => {
     try {
@@ -64,11 +66,14 @@ const Login = () => {
         email: response.user.email,
         uid: response.user.uid,
       });
-      console.log(response.user);
-
+      await db.collection(response.user.uid).add({
+        name: "Tarea de ejemplo",
+        fecha: Date.now(),
+      });
       setEmail("");
       setPassword("");
       setError(null);
+      props.history.push("/admin");
     } catch (error) {
       console.log(error);
       if (error.code === "auth/invalid-email") {
@@ -78,7 +83,7 @@ const Login = () => {
         setError("Email ya utilizado");
       }
     }
-  }, [email, password]);
+  }, [email, password, props.history]);
 
   return (
     <div className="mt-5">
@@ -128,4 +133,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default withRouter(Login);
